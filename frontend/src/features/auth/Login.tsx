@@ -2,7 +2,9 @@ import { useRef, useState, useEffect, FC, FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { useDispatch } from "react-redux";
-import { login } from "./authSlice";
+import { useLoginMutation } from "./authApiSlice";
+import { AuthState, setCredentials } from "./authSlice";
+import { Button, TextField, Typography } from "@mui/material";
 
 const Login: FC = () => {
   const userRef = useRef<HTMLInputElement>(null);
@@ -14,6 +16,8 @@ const Login: FC = () => {
 
   const dispatch = useDispatch();
 
+  const [login, { isLoading }] = useLoginMutation();
+
   useEffect(() => {
     if (userRef.current) {
       userRef.current.focus();
@@ -24,17 +28,20 @@ const Login: FC = () => {
     setErrMsg("");
   }, [username, password]);
 
+  const canSend = username && password;
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
     try {
-      dispatch(login({ username, password }) as any).unwrap();
+      const userData: AuthState = await login({ username, password }).unwrap();
+      dispatch(setCredentials(userData));
+
       setUser("");
       setPwd("");
       navigate("/");
     } catch (err: any) {
       if (!err?.originalStatus) {
-        // isLoading: true until timeout occurs
         setErrMsg("No Server Response");
       } else if (err.originalStatus === 400) {
         setErrMsg("Missing Username or Password");
@@ -55,8 +62,7 @@ const Login: FC = () => {
   const handlePwdInput = (e: React.ChangeEvent<HTMLInputElement>) =>
     setPwd(e.target.value);
 
-  // const content = isLoading ? (
-  const content = false ? (
+  const content = isLoading ? (
     <h1>Loading...</h1>
   ) : (
     <section className="login">
@@ -68,29 +74,50 @@ const Login: FC = () => {
         {errMsg}
       </p>
 
-      <h1>Employee Login</h1>
+      <Typography variant="h2" gutterBottom>
+        Login
+      </Typography>
 
       <form onSubmit={handleSubmit}>
-        <label htmlFor="username">Username:</label>
-        <input
+        <TextField
+          label="Username"
           type="text"
           id="username"
-          ref={userRef}
+          inputRef={userRef}
           value={username}
           onChange={handleUserInput}
           autoComplete="off"
           required
+          variant="outlined"
+          margin="normal"
         />
 
-        <label htmlFor="password">Password:</label>
-        <input
+        <TextField
+          label="Password"
           type="password"
           id="password"
           onChange={handlePwdInput}
           value={password}
           required
+          variant="outlined"
+          margin="normal"
         />
-        <button type="submit">Sign In</button>
+
+        <Button
+          variant="contained"
+          type="submit"
+          color="primary"
+          disabled={!canSend}
+        >
+          Sign In
+        </Button>
+
+        <Typography variant="body1" style={{ marginTop: "16px" }}>
+          Don't have an account?
+          <Button color="primary" onClick={() => navigate("/register")}>
+            Sign Up
+          </Button>
+        </Typography>
       </form>
     </section>
   );

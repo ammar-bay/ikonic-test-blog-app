@@ -5,11 +5,15 @@ import {
   getPost,
   deletePost,
   updatePost,
+  getPostsByUsername,
 } from "../controllers/postController";
 const postRouter = express.Router();
 
 // Get all posts
 postRouter.get("/", getPosts);
+
+// Get all posts by username
+postRouter.get("/:username", getPostsByUsername);
 
 // Create a post
 postRouter.post("/", createPost);
@@ -21,6 +25,6 @@ postRouter.get("/:postId", getPost);
 postRouter.delete("/:postId", deletePost);
 
 // Update a specific post
-postRouter.patch("/:postId", updatePost);
+postRouter.patch("/", updatePost);
 
 export default postRouter;

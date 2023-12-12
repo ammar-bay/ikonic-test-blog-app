@@ -4,14 +4,13 @@ import { selectPostById } from "./postsSlice";
 import PostAuthor from "./PostAuthor";
 import TimeAgo from "./TimeAgo";
 
-import { useParams } from "react-router-dom";
-import { Link } from "react-router-dom";
-import { PostsState } from "./postsSlice";
+import { Link, useParams } from "react-router-dom";
+import { RootState } from "../../app/store";
 
 const SinglePostPage = () => {
   const { postId } = useParams();
 
-  const post = useSelector((state: { posts: PostsState }) =>
+  const post = useSelector((state: RootState) =>
     selectPostById(state, postId!)
   );
 
@@ -29,7 +28,7 @@ const SinglePostPage = () => {
       <h2>{post.title}</h2>
       <p>{post.body}</p>
       <p className="postCredit">
-        <Link to={`/post/edit/${post.id}`}>Edit Post</Link>
+        <Link to={`/post/edit/${post._id}`}>Edit Post</Link>
         <PostAuthor userId={post.userId} />
         <TimeAgo timestamp={post.date} />
       </p>

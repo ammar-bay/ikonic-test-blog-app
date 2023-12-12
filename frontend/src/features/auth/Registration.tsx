@@ -1,7 +1,9 @@
 import { useRef, useState, useEffect, FC, FormEvent } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { register } from "./authSlice";
+import { useRegisterMutation } from "./authApiSlice";
+import { Button, TextField, Typography } from "@mui/material";
+import { AuthState, setCredentials } from "./authSlice";
 
 const Registration: FC = () => {
   const userRef = useRef<HTMLInputElement>(null);
@@ -14,6 +16,8 @@ const Registration: FC = () => {
 
   const dispatch = useDispatch();
 
+  const [register, { isLoading }] = useRegisterMutation();
+
   useEffect(() => {
     if (userRef.current) {
       userRef.current.focus();
@@ -24,14 +28,21 @@ const Registration: FC = () => {
     setErrMsg("");
   }, [username, password]);
 
+  const canSend = username && password && email;
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
     try {
-      dispatch(register({ username, password, email }) as any);
+      const creds: AuthState = await register({
+        username,
+        password,
+        email,
+      }).unwrap();
+      dispatch(setCredentials(creds));
       setUser("");
       setPwd("");
-      navigate("/welcome");
+      navigate("/");
     } catch (err: any) {
       if (!err?.originalStatus) {
         // isLoading: true until timeout occurs
@@ -58,8 +69,7 @@ const Registration: FC = () => {
   const handleEmailInput = (e: React.ChangeEvent<HTMLInputElement>) =>
     setEmail(e.target.value);
 
-  const content = false ? (
-    // const content = isLoading ? (
+  const content = isLoading ? (
     <h1>Loading...</h1>
   ) : (
     <section className="login">
@@ -71,39 +81,62 @@ const Registration: FC = () => {
         {errMsg}
       </p>
 
-      <h1>Register</h1>
+      <Typography variant="h2" gutterBottom>
+        Register
+      </Typography>
 
       <form onSubmit={handleSubmit}>
-        <label htmlFor="username">Username:</label>
-        <input
+        <TextField
+          label="Username"
           type="text"
           id="username"
-          ref={userRef}
+          inputRef={userRef}
           value={username}
           onChange={handleUserInput}
           autoComplete="off"
           required
+          variant="outlined"
+          margin="normal"
         />
 
-        <label htmlFor="username">Email:</label>
-        <input
+        <TextField
+          label="Email"
           type="text"
-          id="username"
+          id="email"
           value={email}
           onChange={handleEmailInput}
           autoComplete="off"
           required
+          variant="outlined"
+          margin="normal"
         />
 
-        <label htmlFor="password">Password:</label>
-        <input
+        <TextField
+          label="Password"
           type="password"
           id="password"
           onChange={handlePwdInput}
           value={password}
           required
+          variant="outlined"
+          margin="normal"
         />
-        <button type="submit">Register</button>
+
+        <Button
+          variant="contained"
+          type="submit"
+          color="primary"
+          disabled={!canSend}
+        >
+          Register
+        </Button>
+
+        <Typography variant="body1" style={{ marginTop: "16px" }}>
+          Already have an account?
+          <Button color="primary" onClick={() => navigate("/login")}>
+            Sign In
+          </Button>
+        </Typography>
       </form>
     </section>
   );

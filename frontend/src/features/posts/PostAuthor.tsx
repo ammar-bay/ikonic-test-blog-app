@@ -1,15 +1,13 @@
 import { useSelector } from "react-redux";
-import { selectAllUsers } from "../users/usersSlice";
+import { selectUser } from "../users/usersSlice";
 
 interface IProps {
   userId: string;
 }
 
 const PostAuthor: React.FC<IProps> = ({ userId }) => {
-  const users = useSelector(selectAllUsers);
+  const user = useSelector(selectUser);
 
-  const author = users.find((user) => user.id === userId);
-
-  return <span>by {author ? author.name : "Unknown author"}</span>;
+  return <span>by {user ? user.username : "Unknown author"}</span>;
 };
 export default PostAuthor;

@@ -1,4 +1,5 @@
 import Post from "../models/Post";
+import User from "../models/User";
 import { Request, Response } from "express";
 
 // Get all posts
@@ -11,14 +12,39 @@ export const getPosts = async (req: Request, res: Response) => {
   }
 };
 
+// Get all posts by username
+export const getPostsByUsername = async (req: Request, res: Response) => {
+  try {
+    const user = await User.findOne({ username: req.params.username });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    const posts = await Post.find({ userId: user._id });
+    res.status(200).json(posts);
+  } catch (error: any) {
+    res.status(404).json({ message: error.message });
+  }
+};
+
 // Create a post
 export const createPost = async (req: Request, res: Response) => {
-  const post = new Post({
-    title: req.body.title,
-    description: req.body.description,
-  });
+  const { title, body, username, date } = req.body;
+  if (!title || !body || !username || !date) {
+    return res.status(400).json({ message: "Please fill all the fields" });
+  }
 
   try {
+    const user = await User.findOne({ username });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    const post = new Post({
+      title,
+      body,
+      userId: user._id,
+      date,
+    });
+
     const savedPost = await post.save();
     res.status(200).json(savedPost);
   } catch (error: any) {
@@ -52,10 +78,12 @@ export const deletePost = async (req: Request, res: Response) => {
 
 // Update a post
 export const updatePost = async (req: Request, res: Response) => {
+  const { id, title, body } = req.body;
+  console.log(req.body);
   try {
     const updatedPost = await Post.updateOne(
-      { _id: req.params.postId },
-      { $set: { title: req.body.title } }
+      { _id: id },
+      { $set: { title, body } }
     );
     res.status(200).json(updatedPost);
   } catch (error: any) {

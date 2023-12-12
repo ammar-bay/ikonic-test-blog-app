@@ -1,7 +1,7 @@
 import express from "express";
 import {
   getUsers,
-  getUserById,
+  getUserByUsername,
   updateUserById,
   deleteUserById,
 } from "../controllers/userController";
@@ -11,8 +11,8 @@ const userRouter = express.Router();
 // Get all users
 userRouter.get("/", getUsers);
 
-// Get user by id
-userRouter.get("/:id", getUserById);
+// Get user by username
+userRouter.get("/:username", getUserByUsername);
 
 // update user by id
 userRouter.put("/:id", updateUserById);

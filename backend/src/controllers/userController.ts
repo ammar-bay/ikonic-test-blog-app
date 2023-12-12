@@ -12,9 +12,9 @@ export const getUsers = async (req: Request, res: Response) => {
 };
 
 // Get user by id
-export const getUserById = async (req: Request, res: Response) => {
+export const getUserByUsername = async (req: Request, res: Response) => {
   try {
-    const user = await User.findById(req.params.id);
+    const user = await User.findOne({ username: req.params.username });
     res.status(200).json(user);
   } catch (error: any) {
     res.status(404).json({ message: error.message });
@@ -25,9 +25,9 @@ export const getUserById = async (req: Request, res: Response) => {
 export const updateUserById = async (req: Request, res: Response) => {
   try {
     const user = await User.findById(req.params.id);
-    const { name, email, password } = req.body;
+    const { username, email, password } = req.body;
     if (user) {
-      user.name = name || user.name;
+      user.username = username || user.username;
       user.email = email || user.email;
       user.password = password || user.password;
       const updatedUser = await user.save();

@@ -1,18 +1,25 @@
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { selectPostById, updatePost, deletePost } from "./postsSlice";
-import { useParams, useNavigate } from "react-router-dom";
-import { PostsState } from "./postsSlice";
-import { selectAllUsers } from "../users/usersSlice";
+import { useNavigate, useParams } from "react-router-dom";
+import {
+  PostState,
+  deletePost,
+  selectPostById,
+  updatePost,
+} from "./postsSlice";
+// import { selectAllUsers } from "../users/usersSlice";
+import { RootState } from "../../app/store";
+import { useDeletePostMutation, useUpdatePostMutation } from "./postApiSlice";
+import { Button, TextField, Typography } from "@mui/material";
 
 const EditPostForm = () => {
   const { postId } = useParams();
   const navigate = useNavigate();
 
-  const post = useSelector((state: { posts: PostsState }) =>
+  const post = useSelector((state: RootState) =>
     selectPostById(state, postId!)
   );
-  const users = useSelector(selectAllUsers);
+  // const users = useSelector(selectAllUsers);
 
   const [title, setTitle] = useState(post?.title);
   const [content, setContent] = useState(post?.body);
@@ -20,7 +27,8 @@ const EditPostForm = () => {
   const [requestStatus, setRequestStatus] = useState("idle");
 
   const dispatch = useDispatch();
-
+  const [updatePostApi, { isLoading: isUpdating }] = useUpdatePostMutation();
+  const [deletePostApi, { isLoading: isDeleting }] = useDeletePostMutation();
   if (!post) {
     return (
       <section>
@@ -31,23 +39,32 @@ const EditPostForm = () => {
 
   const onTitleChanged = (e: any) => setTitle(e.target.value);
   const onContentChanged = (e: any) => setContent(e.target.value);
-  const onAuthorChanged = (e: any) => setUserId(e.target.value);
 
   const canSave =
     [title, content, userId].every(Boolean) && requestStatus === "idle";
 
-  const onSavePostClicked = () => {
+  const onSavePostClicked = async () => {
     if (title && content && userId) {
       try {
         setRequestStatus("pending");
+        await updatePostApi({
+          id: post._id,
+          title,
+          body: content,
+          userId,
+          date: post.date,
+        }).unwrap();
         dispatch(
           updatePost({
-            id: post.id,
-            title,
-            body: content,
-            userId,
-            date: post.date
-          }) as any
+            id: post._id,
+            post: {
+              _id: post._id,
+              title,
+              body: content,
+              userId,
+              date: post.date,
+            },
+          })
         );
 
         setTitle("");
@@ -62,17 +79,11 @@ const EditPostForm = () => {
     }
   };
 
-  const usersOptions = users.map((user) => (
-    <option key={user.id} value={user.id}>
-      {user.name}
-    </option>
-  ));
-
-  const onDeletePostClicked = () => {
+  const onDeletePostClicked = async () => {
     try {
       setRequestStatus("pending");
-      dispatch(deletePost(post) as any).unwrap();
-
+      await deletePostApi(post._id).unwrap();
+      dispatch(deletePost(post._id));
       setTitle("");
       setContent("");
       setUserId("");
@@ -85,40 +96,50 @@ const EditPostForm = () => {
   };
 
   return (
-    <section>
-      <h2>Edit Post</h2>
-      <form>
-        <label htmlFor="postTitle">Post Title:</label>
-        <input
-          type="text"
-          id="postTitle"
-          name="postTitle"
-          value={title}
-          onChange={onTitleChanged}
-        />
-        <label htmlFor="postAuthor">Author:</label>
-        <select id="postAuthor" value={userId} onChange={onAuthorChanged}>
-          <option value=""></option>
-          {usersOptions}
-        </select>
-        <label htmlFor="postContent">Content:</label>
-        <textarea
-          id="postContent"
-          name="postContent"
-          value={content}
-          onChange={onContentChanged}
-        />
-        <button type="button" onClick={onSavePostClicked} disabled={!canSave}>
-          Save Post
-        </button>
-        <button
-          className="deleteButton"
-          type="button"
-          onClick={onDeletePostClicked}
-        >
-          Delete Post
-        </button>
-      </form>
+    <section
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: "1rem",
+        padding: "0 2rem",
+      }}
+    >
+      <Typography variant="h5" gutterBottom>
+        Edit Post
+      </Typography>
+      <TextField
+        id="postTitle"
+        name="postTitle"
+        label="Post Title"
+        fullWidth
+        value={title}
+        onChange={onTitleChanged}
+      />
+      <TextField
+        id="postContent"
+        name="postContent"
+        label="Content"
+        fullWidth
+        multiline
+        rows={4}
+        value={content}
+        onChange={onContentChanged}
+      />
+      <Button
+        variant="contained"
+        color="primary"
+        onClick={onSavePostClicked}
+        disabled={!canSave}
+      >
+        Save Post
+      </Button>
+      <Button
+        variant="contained"
+        color="secondary"
+        onClick={onDeletePostClicked}
+      >
+        Delete Post
+      </Button>
     </section>
   );
 };

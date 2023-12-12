@@ -14,20 +14,23 @@ import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
 import Login from "./features/auth/Login";
 import Registration from "./features/auth/Registration";
+import { useEffect } from "react";
+import Profile from "./features/users/Profile";
 
 function App() {
   return (
     <Routes>
       <Route path="/" element={<Layout />}>
         {/* public routes */}
-        <Route index element={<PostsList />} />
         <Route path="login" element={<Login />} />
         <Route path="register" element={<Registration />} />
 
         {/* protected routes */}
         <Route element={<RequireAuth />}>
+          <Route index element={<PostsList />} />
+          <Route path="profile" element={<Profile />} />
           <Route path="post">
-            <Route index element={<AddPostForm />} />
+            <Route path="add" element={<AddPostForm />} />
             <Route path=":postId" element={<SinglePostPage />} />
             <Route path="edit/:postId" element={<EditPostForm />} />
           </Route>

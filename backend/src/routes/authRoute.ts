@@ -1,5 +1,9 @@
 import express from "express";
-import { registerUser, loginUser } from "../controllers/authController";
+import {
+  registerUser,
+  loginUser,
+  refreshToken,
+} from "../controllers/authController";
 import authMiddleware from "../middleware/auth";
 import authorizeMiddleware from "../middleware/authorize";
 
@@ -18,5 +22,7 @@ authRouter.post(
 
 // Login user
 authRouter.post("/login", loginUser);
+
+authRouter.get("/refresh", refreshToken);
 
 export default authRouter;

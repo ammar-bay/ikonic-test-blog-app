@@ -1,10 +1,10 @@
 import { Button, TextField, Typography } from "@mui/material";
-import { nanoid } from "@reduxjs/toolkit";
 import { useState } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-
-import { addNewPost } from "./postsSlice";
+import { selectCurrentUser } from "../auth/authSlice";
+import { useAddNewPostMutation } from "./postApiSlice";
+import { PostState, addPost } from "./postsSlice";
 
 const AddPostForm = () => {
   const dispatch = useDispatch();
@@ -15,23 +15,26 @@ const AddPostForm = () => {
 
   const onTitleChanged = (e: any) => setTitle(e.target.value);
   const onContentChanged = (e: any) => setContent(e.target.value);
-  const userId = ""
+
+  const username = useSelector(selectCurrentUser);
+
   const canSave =
     [title, content].every(Boolean) && addRequestStatus === "idle";
 
-  const onSavePostClicked = () => {
+  const [addNewPostApi, { isLoading }] = useAddNewPostMutation();
+
+  const onSavePostClicked = async () => {
     if (canSave) {
       try {
         setAddRequestStatus("pending");
-        dispatch(
-          addNewPost({
-            id: nanoid(),
-            title,
-            body: content,
-            userId,
-            date: new Date().toISOString(),
-          }) as any
-        ).unwrap();
+        const newPost: PostState = await addNewPostApi({
+          title,
+          body: content,
+          username,
+          date: new Date().toISOString(),
+        }).unwrap();
+
+        dispatch(addPost(newPost));
 
         setTitle("");
         setContent("");
@@ -50,7 +53,7 @@ const AddPostForm = () => {
         display: "flex",
         flexDirection: "column",
         gap: "1rem",
-        padding: "0 2rem"
+        padding: "0 2rem",
       }}
     >
       <Typography variant="h5" gutterBottom>

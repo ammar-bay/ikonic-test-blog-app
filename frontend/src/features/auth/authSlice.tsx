@@ -1,49 +1,18 @@
-import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
-import axios from "axios";
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-const URL = "http://localhost:5001";
-
-interface AuthState {
+export interface AuthState {
   username: string | null;
   accessToken: string | null;
-  status: "idle" | "loading" | "succeeded" | "failed";
-  error: string | null | undefined;
 }
 
-interface Credentials {
-  username: string;
-  password: string;
-}
-
-interface Register extends Credentials {
-  email: string;
-}
-
-export const login = createAsyncThunk<AuthState, Credentials>(
-  "auth/login",
-  async (credentials) => {
-    const response = await axios.post<AuthState>(
-      `${URL}/auth/login`,
-      credentials
-    );
-    return response.data;
-  }
-);
-
-export const register = createAsyncThunk<AuthState, Register>(
-  "auth/register",
-  async (credentials) => {
-    const response = await axios.post<AuthState>(
-      `${URL}/register`,
-      credentials
-    );
-    return response.data;
-  }
-);
+const initialState: AuthState = {
+  username: null,
+  accessToken: null,
+};
 
 const authSlice = createSlice({
   name: "auth",
-  initialState: { username: null, accessToken: null } as AuthState,
+  initialState,
   reducers: {
     setCredentials: (state, action: PayloadAction<AuthState>) => {
       const { username, accessToken } = action.payload;
@@ -54,23 +23,6 @@ const authSlice = createSlice({
       state.username = null;
       state.accessToken = null;
     },
-  },
-  extraReducers(builder) {
-    builder
-      .addCase(login.pending, (state) => {
-        state.status = "loading";
-      })
-      .addCase(login.fulfilled, (state, action) => {
-        state = action.payload;
-        state.status = "succeeded";
-      })
-      .addCase(register.pending, (state) => {
-        state.status = "loading";
-      })
-      .addCase(register.fulfilled, (state, action) => {
-        state = action.payload;
-        state.status = "succeeded";
-      });
   },
 });
 
